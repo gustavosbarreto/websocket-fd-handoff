@@ -1,0 +1,31 @@
+services:
+  nginx:
+    build: ./nginx
+    ipc: "shareable"
+    volumes:
+      - websocket_socket:/tmp
+    ports:
+      - "9000:9000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ipc: "service:nginx"
+    volumes:
+      - websocket_socket:/tmp
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.external-url=http://localhost:9000/prometheus/"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+volumes:
+  websocket_socket:
+    driver: local
